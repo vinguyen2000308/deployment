@@ -1,0 +1,30 @@
+1. Install Mariadb
+    - Config bin log
+        + Edit file cnf by: sudo vi /etc/mysql/my.cnf with config
+            [client-server]
+            [client]
+            port = 3306
+            socket = /tmp/mysql.sock
+            [mysqld]
+            port = 3306
+            socket = /tmp/mysql.sock
+            bind-address = 0.0.0.0
+            log-bin=mysql-bin
+            binlog_format=mixed
+            slow_query_log
+            long_query_time = 2
+
+2. Edit Security Group
+    - open port 3306
+    
+3. Add connection to DB ever
+    - Do not use root user -> Create new one
+        mysql> CREATE USER 'vinv'@'%' IDENTIFIED BY 'vinv@app';
+        mysql> GRANT ALL PRIVILEGES ON *.* TO 'vinv'@'%' WITH GRANT OPTION;
+    - Using SSH tunnel
+        + IP 108.136.236.166:22
+        + user: ubuntu
+        + Authentication Method: Public Key
+        + Private key: Example C:\Users\nguye\OneDrive\Desktop\Keys\test1.pem
+
+https://stackoverflow.com/questions/1559955/host-xxx-xx-xxx-xxx-is-not-allowed-to-connect-to-this-mysql-server
