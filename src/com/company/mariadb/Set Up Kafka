@@ -1,0 +1,8 @@
+1. Add Inbound Rule for Kafka
+
+2. Create docker-compose file
+    + Config KAFKA_ADVERTISED_LISTENERS: for remote using like in file
+    link https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+3. Test
+- Create topic
+    + kafka-topics.bat --create --topic test --partitions 1 --replication-factor 1 --bootstrap-server 108.136.39.167:9092

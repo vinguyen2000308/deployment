@@ -1,5 +1,15 @@
 1. Install Mariadb
-    - Config bin log
+    - Run Command
+        + sudo apt update && sudo apt upgrade
+        + sudo apt install mariadb-server
+        + sudo mysql_secure_installation
+    - For restart and checking status
+        +  systemctl start mariadb
+        +  systemctl enable mariadb - Start mariadb at boot
+        +  systemctl status mysql
+        +  systemctl stop mariadb
+        +  systemctl restart mariadb
+    - Config bin log by config file
         + Edit file cnf by: sudo vi /etc/mysql/my.cnf with config
             [client-server]
             [client]
@@ -16,7 +26,7 @@
 
 2. Edit Security Group
     - open port 3306
-    
+
 3. Add connection to DB ever
     - Do not use root user -> Create new one
         mysql> CREATE USER 'vinv'@'%' IDENTIFIED BY 'vinv@app';
