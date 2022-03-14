@@ -5,3 +5,16 @@ sudo lsof -i:22 ## see a specific port such as 22 ##
 sudo nmap -sTU -O IP-address-Here
 
 Test-NetConnection -ComputerName 108.136.236.166 -Port 8124
+
+-- Install mysql client
+
+sudo apt install mysql-client-core-8.0
+mysql --host=108.136.236.166 --user=vinv --password=vinv@app eventuate
+
+
+docker-compose rm -svf
+
+====================================== Server 1 [FREE] ================================
+====================================== Server 2  ================================
+1. Create topic
+kafka-topics.bat --create --topic test --partitions 1  --replication-factor 1 --bootstrap-server 108.136.143.34:9092

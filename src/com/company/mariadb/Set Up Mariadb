@@ -36,5 +36,10 @@
         + user: ubuntu
         + Authentication Method: Public Key
         + Private key: Example C:\Users\nguye\OneDrive\Desktop\Keys\test1.pem
+4. Root password
 
 https://stackoverflow.com/questions/1559955/host-xxx-xx-xxx-xxx-is-not-allowed-to-connect-to-this-mysql-server
+ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('vinv@app');
+
+If we using root account to login  -> need to sudo  -> sudo mysql -u root -p <PASSWORD>
+
