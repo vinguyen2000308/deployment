@@ -1,0 +1,34 @@
+
+1. Thread
+Create Thread Thread test1 = new Thread();
+		test1.start();
+
+khi mà thread.start() -> JVM sheduled this thread to run
+Code to run in the run() method
+run(): check the how the object of thread was created. If using default constructor -> return
+immediately
+in the run code -> not execute in one go. Operating system decides the amount of time to allocate and when to allocate
+
+2. Specify code to run
+- Method 1: extends Thread class and override run() method. This method return void
+- Method 2: implements Runnable interface and override run() method. After that pass Runnable object to the Thread constructor and start a thread
+	+ Using lamdas expression
+	+ Using method reference
+3. Using multiple threads
+- Create 2 threads and start
+call start() -> not start right away. -> do some housekeeping before it really can run the thread -> It up to operating system
+4. Issues in using multiple threads
+Only care when: multiple threads have to coordinate based on some conditions or some shared resources
+- Race condition: the out come dependes on the order of threads take place
+Okay sử dụng từ khóa synchronize để chi cho phép 1 thread được chạy tại một thời điểm
+Sử dụng cho method ở trong Thread class why ?
+How synchronize keyword works ?
+5. JVM Memory Model
+
+ 	Thread 1 <--------------------> Main memory <--------------------> Thread 2
+  Working memory for thread 1                                  Working memory for thread 2
+
+Mỗi Thread sẽ có một working memory riêng.
+Thread 1 đọc value từ main memory và update but don't write back to main memory
+What could happend ?
+
