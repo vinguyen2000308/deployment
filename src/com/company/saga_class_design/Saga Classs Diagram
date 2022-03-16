@@ -1,0 +1,101 @@
+- Lưu các List các step Step 1 Order, Step 2 Customer, Step 3 Payment
+
+
+How to save step into redis
+Saga
+   - CreateOrderSaga
+
+Interface Command
+    - String getPayload
+    - String getDestination
+Example:
+    - CreateOrderCommand
+        + Order details
+    - ValidateCustomerCommand
+        + customer_id
+    - ExecutePaymentCommand
+        + customer_id
+        + payment_id
+        + total_cost
+
+Step
+- String: destination
+- String: reply-destination
+- Class<C>: sagaType - create order saga
+- String: payload - to send to service. command payload
+- List<Command>: execute command, rollback command, cancel command
+- String: stepOutcome
+
+
+
+Step : CreateOrderStep
+        - destination: orderService
+        - reply_destination: createOrderReply
+        - sagaType: CreateOrderSaga.class
+        - ExecuteCommand: CreateOrderCommand
+        - RollbackCommand: RollbackCreateOrderCommand
+        - ConfirmCommand: null
+
+
+Message
+   - message_id
+   - reply_message_id: Long for reply
+   - header
+        + destination
+        + saga_id
+        + reply_channel
+        + command_type
+        + current_step: base 1
+   - payload
+
+
+StepDefinition:
+    stepDefinition: Map<Integer,Step>
+        1:CreateOrderCommandStep
+        2:ValidateCustomerStep
+        3:ExecutePaymentCommandStep
+
+Saga_Instance
+    - id
+    - saga_type
+    - current_execute
+    - saga_state: payload
+    - create_datetime
+    - completion_datetime
+
+
+
+// Saga State
+   - CreateSagaState: to store information of all
+
+Message Handler
+
+// Saga - Send message
+1. Request
+2. Create saga instance with saga_state
+    - save list of step to redis with saga_id < call to redis>
+    - save saga_instance info to db
+3. Create message
+    - Send to topic orderChannel
+    - Save message to db
+
+Saga
+    - saga_instance
+    - received_message
+    - message
+
+Service
+    - received_message
+
+// Saga - Receives message
+   Handle reply:
+1. If it is success reply
+   - Get saga_id -> get saga_definition from redis ->  get next command by increase current step and send
+   Function: get message_header send command
+        + set data to saga_state
+        + update saga instance
+        + insert success reply: receiver message to received_message
+        + insert new message: to message
+   If it false
+    - send command rollback
+

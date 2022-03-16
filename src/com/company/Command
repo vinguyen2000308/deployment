@@ -12,9 +12,24 @@ sudo apt install mysql-client-core-8.0
 mysql --host=108.136.236.166 --user=vinv --password=vinv@app eventuate
 
 
+show variables like '%bin%';
+
+
+
 docker-compose rm -svf
 
 ====================================== Server 1 [FREE] ================================
 ====================================== Server 2  ================================
 1. Create topic
 kafka-topics.bat --create --topic test --partitions 1  --replication-factor 1 --bootstrap-server 108.136.143.34:9092
+
+
+com.example.demo_saga.domain.CreateOrderSaga-reply
+
+--bootstrap-server 108.136.246.210:9092
+
+C:\Users\nguye\Documents\kafka\bin\windows
+
+kafka-console-consumer.bat --topic orderService   --bootstrap-server 108.136.246.210:9092 --from-beginning
+
+
