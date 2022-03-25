@@ -1,0 +1,51 @@
+1.Topics and Partitions
+
+
+    Messages in Kafka are categorized into topics.
+    Topics are additionally broken down into a number of partitions
+
+    Partitions are also the way that Kafka provides redundancy
+    and scalability
+    - Mỗi partition thì có thể được host trên các server khác nhau và có thể tăng thêm tính redundancy bằng cách
+    thêm replication
+
+2. Producers and Consumers
+    - Producer: Mặc định là không quan tâm đến partition đối với một message nó sẽ thực hiện round robin chia đều. Nhưng nếu
+    có thêm key thì các message cùng key sẽ luôn luôn vào cùng một partition. Để đảm bảo điều này thì phải same key và
+    số partition phải được cấu hình trước. Nếu thay đổi số partition ví dụ tăng lên thì hash sẽ tính ra partition mới
+    cho message với key cũ
+    - Consumer: Nó sẽ subscribe cho 1 hoặc nhiều topic. Nó cũng sẽ theo dõi những cái messages nào mà được consumed - message offset
+    - Consumers thì sẽ hoạt động theo cơ chế consumer group. Đó là một hoặc nhiều consumer sẽ cùng consume một topic.
+    Consumer group đảm bảo là mỗi partition sẽ chỉ được một consumer trong group consume.
+    Ví dụ topic có 4 partitions và 1 consumer group với 3 consumers thì
+        + consumer 1 sẽ consume partition 1
+        + consumer 2 sẽ consume partition 2 và 3
+        + consumer 3 sẽ consume partition 4
+    Nếu như một consumer trong group bị lỗi thì group nó sẽ tự động cân bằng lại rebalance lại
+3. Brokers and Clusters
+    - Một kafka server thì được gọi là broker. Broker sẽ nhận message từ producer, gắn offsets cho chúng và commits các
+    message để store ở trên disk . Nó cũng resonse cho fetch requests cho partitions và responding với những message đã
+    được commit.
+    - Đối với cluster, thì một broker sẽ serve như là `cluster controller` được lựa chọn tự động trong số những broker còn
+    sống. Nhiệm vụ là:
+        + Chia partitions cho broker
+        + Theo dõi nếu có broker failures
+    - Một partition được owned bởi 1 broker ở trong cluster -> Broker đó gọi là leader của cái partition đó
+    Trong một cluster có một broker sở hữu một partition -> Broker đó là master hoặc leader. Một cái sẽ làm bản gốc
+    Và nó sẽ có những replicated partitions. Cung cấp cái redundancy. Và tất cả các operating thì chỉ diễn ra ở leader
+    partition.
+    - retention: tức là cái message đó nó sẽ được giữ bao lâu trong storage
+4. Multiple Clusters
+    - MirrorMaker - a kafka consumer và producer linked tới queue.
+    - Aggregating messages from two local clusters into an aggregate cluster, and then copying that
+      cluster to other datacenters
+5. Tại sao sử dụng kafka ? 
+- Multiple Producers: Sử dụng nhiều producer có thể cho 1 topic hoặc nhiều topics. -> Đảm bảo nếu có nhiều nguồn sản sinh 
+ra message thì nó vẫn giữ được tính toàn vẹn. 
+- Multiple Consumer: Được thiết kế để có thể multiple consumers có thể đọc any single stream message nào mà không interfering 
+với cái khác. 
+- Disk-based retention: Messages được commited vào disk và có thể store với cái configurable retention rules. 
+   Việc này đảm bảo nếu cái consumer bị fall thì sẽ không có nguy hiểm đến mất dữ liệu. Off ứng dụng trong một khoảng thời gian mà
+   không bị lo về mất data. 
+- Scalable: Có thể thực hiện ngay cả khi online và không ảnh hưởng đến availability của system. Có thể xử lý nếu 1 broker bị chết 
+- High Performance 

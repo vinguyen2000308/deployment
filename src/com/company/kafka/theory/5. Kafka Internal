@@ -1,0 +1,4 @@
+Summary
+- How kafka replication works
+- How kafka handles request from producers and consumer
+- How kafka handles storage such as file format and indexes

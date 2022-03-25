@@ -1,0 +1,24 @@
+1. Topic Operations
+    1.1 Creating a new topic
+        [--topic]: topic name: tên
+        [--partitions <integer>]: partition: số partitions cho topic
+        [--replication-factor <integer>]: replication factor: số lượng replications trong cluster
+    1.2 Adding partitions
+        - Partition là cách mà topic scaled và replicated across cluster
+        Lý do để thêm partition là spread out cái topic và giảm throughput cho single partitions
+        Mình thêm partitions thì có thể thêm consumers. Đồng nghĩa tăng khả năng xử lý
+        [NOTE] Trong một consumer group thì 1 consumer chỉ được consume 1 partition.
+        - Lưu ý đối với các topic sử dụng key để đẩy message vào specific partition thì không resize
+        [--if-exists]: Skipping for errors với topic mà không tồn tại. Nó sẽ không trả ra lỗi nếu mà cái topic sử dụng alter - đang được
+        thay đổi không tồn tại -> Không biết được là có topic đó hay không và đang tăng nhầm partition cho topic khác.
+        => Không nên tồn tại
+    1.3 Deleting a topics
+    1.4 Listing all topics in cluster
+    1.5 Describing topic details
+2. Consumer Groups
+3. Dynamic Configuration Changes
+4. Partition Management
+5. Consuming and Producing
+6. Client ACLs
+7. Unsafe Operations
+Summary
