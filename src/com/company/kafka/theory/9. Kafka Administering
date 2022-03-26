@@ -12,13 +12,247 @@
         [--if-exists]: Skipping for errors với topic mà không tồn tại. Nó sẽ không trả ra lỗi nếu mà cái topic sử dụng alter - đang được
         thay đổi không tồn tại -> Không biết được là có topic đó hay không và đang tăng nhầm partition cho topic khác.
         => Không nên tồn tại
+
     1.3 Deleting a topics
+        - Nếu topic mà không cần nữa thì nên xóa nó đi để có thể giải phóng resource including disk space, open filehandles, and memory
+        - Để thực hiện xóa thì broker ở trong cluster phải được config delete.topic.enable = true
+        [IMPORTANT NOT]: Xóa topic sẽ xóa cả message ở trong đó nên cần thực hiện một cách cẩn thận
+
     1.4 Listing all topics in cluster
+        - kafka-topics --list --bootstrap-server server:port
+
     1.5 Describing topic details
+        - Describe topic in all cluster:
+            kafka-topics.sh --zookeeper zookeeper-server:port --describe
+            Nếu không cần cụ thể topic nào thì không cần thêm [--topic]
+        - Một vài filter có thể thêm:
+            + [--topics-with-overrides]: Chỉ ra nhũng topic có cấu hình khác với những topic còn lại trong cluster
+            + [--under-replicated-partitions]: Chỉ ra các partitions mà có 1 hoặc nhiều replications đang không đồng bộ với leader
+            + [--unavailable-partitions]: Chỉ ra các partitions mà đang không có leader
+
+
 2. Consumer Groups
+       - Đối với old consumer thì nó được save trong zookeeper
+       - Với các bản mới hơn sử dụng kafka-consumer-groups.sh sử dụng để list và describe
+       - Đối với consumer cũ thì có thể sử dụng zookeeper để xóa consumer groups và offset information
+       2.1 List and Describe groups
+        - [COMMAND] kafka-consumer-groups.sh --list
+        - [COMMAND] kafka-consumer-groups.sh --describe --group group-name:
+            + GROUP: tên của group
+            + TOPIC: tên topic mà group đang consume
+            + PARTITION: id partition mà đang được consume
+            + CURRENT-OFFSET: consumer đang consume đến đâu
+            + LOG-END-OFFSET: producer đã sinh ra bao nhiêu message và commit vào đây
+            + LAG: Còn bao nhiêu message mà chưa được consume
+            + CONSUMER-ID: consumer id của consumer group
+            + HOST: [Cần tìm hiểu thêm]
+            + CLIENT-ID: [Cần tìm hiểu thêm]
+       2.2 Xóa consumer group - Chỉ áp dụng với old clients
+        - Nó sẽ xóa consumer group và toàn bộ offsets cho tất cả các topic mà cái group đó đang consume
+       2.3 Offsets Management
+        - FOR OLD CLIENT  it is also possible to retrieve the offsets and store new offsets in a batch
+
+
 3. Dynamic Configuration Changes
+    - Các configurations có thể được thay đổi trong khi cluster đang chạy cho topics và cho clients
+    - Sử dụng [kafka-configs.sh] cho phép set config cho specific topic và client id. Khi thực hiện set xong thì nó sẽ được lưu
+    ở zookeeper và được đọc bởi mỗi broker khi mà chúng start.
+    3.1 Overriding Topic Configuration Defaults
+        - Format:
+    kafka-config.sh --zookeeper zookeeper-server:port --alter --entity-type topics --entity-name <topic-name> --add-config <key>=<value>[,<key>=<value>]
+     Configuration keys:
+        1. [cleanup.policy] value: compact
+            Nếu set là compat thì các messages ở trong topic sẽ bị  loại bỏ chỉ những messages gần đây với một số key là được giữ lại
+        2. [compression.type]: gzip, snappy and lz4
+            Loại thuật toán nén khi mà writing message batches cho cái topic này ra đĩa. Trước khi viết ra đĩa nó sẽ sử dụng thuật toán nén để nén các message
+            lại
+        3. [delete.retention.ms]: milliseconds Only for log compacted topics. Tức là chỉ áp dụng cho topic với cleanup.policy=compact
+        4. [file.delete.delay.ms]: milliseconds
+            Set khoảng thời gian, sau cái khoảng thời gian này thì log segments và indices cho cái topic này sẽ được xóa
+        5. [flush.messages]: value: how many
+            Số lượng messages sẽ được nhận trước khi bắt buộc flush những message to disk
+            Tức là nếu set flush.messages=100 thì với topic này broker sẽ nhận 100 messages và sau đó nó sẽ flush những
+            message này từ buffer ra đĩa để có thể lưu lâu dài.
+        6. [flush.ms] value: milliseconds
+            Khoảng thời gian sau đó sẽ thực hiện flush. Tương tự như flush.messages nhưng đơn vị là thời gian
+        7. [index.interval.bytes]
+            Khoảng bao nhiêu byte messages có thể được produced between entries in the log segment’s index. [Un clear]
+        8. [max.message.byte] value: byte
+            Cái size tối đa của message đới với topic này. Ví dụ 1 message là 1mb đối với topic này
+            Tùy từng loại topic thì nội dung cái message có thể là khác nhau to hay nhỏ.
+        9. [message.format.version] valid value example: "0.10.0"
+            Broker sẽ sử dụng khi mà write cái message to disk
+        10. [message.timestamp.difference.max.ms] value: milliseconds
+            Khoảng thời gian tối đa giữa message timestamp và broker timestamp khi mà message được received.
+            Chỉ valid khi mà [message.timestamp.type=CreateTime]. Tức là cái time mà message sinh ra và message đên broker
+            Ví dụ: message 1 sinh ra tại 10:20.21 và khi đến broker nó là 10.25.21 -> 5 m. Nếu message.timestamp=1000*60*5 => Message đó
+            đang đến muộn lỗi
+        11. [message.timestamp.type] value: CreateTime nếu sử dụng thời gian mà được chỉ định bởi client. LogAppendTime cỉ định thời gian
+            mà message đó được viết vào partition của broker.
+        12. [min.cleanable.dirty.ratio] value: only for log compacted.
+        13. [min.insync.replicas] value: number
+            Số lượng replicas phải được in-sync(đồng bộ) đối với partition để có thể xem xét nếu như partition là available
+            ví dụ: Topic order-service 5 partition  và 3 replication factor.
+             Khi mình sét [min.insync.replicas=2] thì có nghĩa là partition 1 của mình được xem sét là available khi nó
+             chỉ bị mất 1 replica còn lại 2 replicas bao gồm cả leader partitions
+        14. [preallocate] value: true,false
+            Nếu là true thì log segments cho cái topic này sẽ được phân chia trước khi mà new segment is rolled.
+        15. [retention.byte] value: bytes applied for partitions
+            Size tối đa cho partition (which consists of log segments) có thể grow trước khi chúng ta xóa đi log segment cũ để free space nếu chúng ta sử dụng delete retention policy
+            Vì đây là áp dụng cho partition level nên cần nhân với số partitions ở trong topic để ra topic retention bytes
+        16. [retention.ms] value: milliseconds 7days = 604800000. -1 sẽ no time limit applied.
+            Cấu hình thời gian tối đa chúng  retain giữ lại a log trước khi loại bỏ các old log segments để free up space nếu  chúng ta sử dụng delete retention policy
+        17. [segment.bytes]: value bytes default 1gb
+            Cấu hình số lượng message tính theo bytes theo đó message sẽ được viết vào một single log segment ở trong partition.
+            Ví dụ 1 partition cấu hình là segement.bytes=1024 bytes =1mb. Thì khi mà cái log segment này đạt 1mb nó sẽ tạo mới
+            1 log segment. 1 partition sẽ có nhiều log segments
+        18. [segment.index.bytes]
+            The maximum size, in bytes, of a single log segment index
+        19. [segment.jitter.ms]
+        20. [segment.ms] values milliseconds
+            Khoảng bao lâu lại rotated log segment đối với mỗi partition.
+
+     3.2 Overriding Client Configuration Default
+         Đối với kafka thì chỉ có thể override client là producers and consumers đều là rate bytes per second/
+         Được cho phép hoặc là  produce hoặc là consume đối trên 1 broker.
+         Ví dụ đối với producer có 5 brokers trong cluster và chỉ định định cho producer là có thể gửi 10 MB/sec for a client  ->
+         Cluster total sẽ là 50 Mb/s
+      Client ID và Consumer Group
+      Set client ID cho mỗi consumer group với unique id để có thể phân biệt được group
+      kafka-configs.sh --zookeeper zookeeper-server:port --alter --entity-type clients --entity-name <client-id> --add-config <key>=<value>
+            -- producer_bytes_rate: số lượng message có thể gửi tính theo byte trên 1 giây từ producer đến 1 broker
+            -- consumer_bytes_rate: số lượng message có thể được consumed tính theo byte trên 1 giây
+     3.3 Describing Configuration Overrides
+        [kafka-configs.sh --zookeeper zookeeper-server:port --describe --entity-type topics --entity-name topic-name]
+     [IMPORTANT NOTE] Sử dụng câu lệnh trên chỉ hiện ra overrides only, nó không bao gồm cluster default configurations.
+     3.4 Removing Conguration Overrides
+        kafka-configs.sh --zookeeper zookeeper-server:port --alter --entity-type topics --entity-name topic-name --delete-config config-name
+        Example:
+            kafka-configs.sh --zookeeper zookeeper-server:port --alter --entity-type topics --entity-name  my-topic --delete-config retention.ms
+            => Updated config for topic: "my-topic"
+
+
+
+
 4. Partition Management
+    4.1 Preferred Replica Election
+        - When a broker is stopped and restarted, it does not resume leadership of any partitions automatically.
+        Khi mả broker được stop và restarted thì nó sẽ không trở lại làm leadership của bất cứ một partition nào một cách tự động
+         Automatic Leader Rebalancing
+            Có cấu hình cho [automatic leader rebalancing] nhưng NÓ KHÔNG ĐƯỢC KHUYẾN KHÍCH CHO PRODUCER USE
+            Bởi: Ảnh hướng đến performance và nó có thể khiến cái khoảng thời gian bị dừng lâu hơn ở trong một cluster lớn.
+         - Một cách để có thể khiến nó trở lại là leadership là trigger a preferred replica election.
+         Nó sẽ nói với cluster controller để select ideal leader for partitions -> Không có ảnh hưởng bởi client có thể track leadership changes automatically
+         Sử dụng:
+            kafka-preferred-replica-election.sh
+            Đối với clusters mà có một lượng lớn partitions, thì nó có khả năng là single preferred replication election có thể sẽ không thể chạy.
+            Cái request này phải được viết vào zookeeper znode ở trong metadata cluster và nếu như request nó lớn hơn size for a znode default là 1 thì nó sẽ lỗi
+            Trong trường hợp này cần phải tạo file json và list ra partitions để elect và break the request into multiple steps.
+                {
+                 "partitions": [
+                     {
+                         "partition": 1,
+                         "topic": "foo"
+                     },
+                     {
+                         "partition": 2,
+                         "topic": "foobar"
+                     }
+                 ]
+                }
+            kafka-preferred-replica-election.sh --zookeeper zoo1.example.com:2181/kafka-cluster --path-to-json-file partitions.json
+
+    4.2 Changing a Partition’s Replicas
+        Cần thiết để thay đổi replica assigments cho partition.
+        Khi nào cần thay đổi:
+            - Nếu những partitions của 1 topic không balanced across the cluster -> Gây ra uneven load ở trên brokers
+            - Nếu như broker bị tắt offline và cái partition không được replicated
+            - Khi thêm mới broker và cần share tải giữa các node trong cluster
+        Sử dụng tool này trong 2 step:
+            Step 1: Sử dụng broker list và topic list để generate a set of moves
+                [COMMAND] kafka-reassign-partitions.sh --zookeeper zoo1.example.com:2181/kafka-cluster --generate
+                --topics-to-move-json-file topics.json --broker-list 0,1
+                 2 phần:
+                    Phần hiện tại: Current partition replica assignment lưu lại nếu cần
+                    Phần để move: Proposed partition reassignment configuration lưu vào file mới để chạy bước tiếp theo
+                    ví dụ reassign.json
+            Step 2: Executes the moves cái mà được generated
+                [COMMAND]kafka-reassign-partitions.sh --zookeeper zoo1.example.com:2181/kafka-cluster
+                --execute --reassignment-json-file reassign.json
+            Hành động này sẽ reassignment lại replica của specified partition to new brokers.
+            Cluster controller thực hiện hành động này bằng thêm new replicas  vào replicas list chỗ mỗi partition (increasing the replication factor)
+            Phụ thuộc vào size của số lượng partitions có trên disk mà hành động này có thể tốn một khoảng thời gian bời vì dữ liệu được copy qua network
+
+            [LƯU Ý: Khi mà remove nhiều partitions từ một single broker vì mình cần tách broker đó khỏi cluster.
+            Nên shutdown và restart broker trước khi reassignment. Nó sẽ move leadership mà đang có trên broker đó
+            sang broker khác trong cluster miễn là automatic leader elections không được enable.
+            Thì việc này có thể tăng performance của việc reassignments và giảm ảnh hướng tới cluster cũng như quá trình
+             replication traffic sẽ được distributed qua rất nhiều brokers.]
+
+            Step 3: [Optional] Check nếu hoàn thành.
+            Để check cần có file json ở step 2 execute
+            [COMMAND]  kafka-reassign-partitions.sh --zookeeper zoo1.example.com:2181/kafka-cluster --verify --reassignment-json-file reassign.json
+        Nên chia nhỏ quá trình reassignment thành nhiều bước nhỏ
+    4.3 Changing Replication Factor
+        Trường hợp cần là khi tạo partition với cái replication factor là sai. Ví dụ không đủ brokers khi mà tạo topic
+        Việc này có thể hoàn thành bằng cách là sử dụng file json format ở bước thay đổi partition và thêm replicas. Cluster sẽ hoàn thành
+        reassigment và giữ replication factor với new size
+        Ví dụ: current replication factor
+            {
+              "partitions": [
+                {
+                  "topic": "my-topic",
+                  "partition": 0,
+                  "replicas": [
+                    1
+                  ]
+                }
+              ],
+              "version": 1
+            }
+        After increase replication factor
+            {
+              "partitions": [
+                {
+                  "partition": 0,
+                  "replicas": [
+                    1,
+                    2
+                  ],
+                  "topic": "my-topic"
+                }
+              ],
+              "version": 1
+            }
+    4.4 Dumping Log Segments [Để xem từng message mà không cần consume và decode ]
+      Nếu như bạn cần tìm specific content of message bời vì có message lỗi và consumer không thể handle.
+      Tool để decode log segment cho a partition -> Cho phép xem từng message và không cần consume và decode chúng.
+
+      - kafka-run-class.sh kafka.tools.DumpLogSegments --files 00000000000052368601.log
+      -  kafka-run-class.sh kafka.tools.DumpLogSegments --files 00000000000052368601.log --print-data-log
+
+     Validate index cùng với log segment. Index được sử dụng để tìm message ở trong log segment. Nếu như nó bị corrupted
+     sẽ gây lỗi trong consumption
+
+     Validation được thực hiện khi mà broker starts up ở trong trạng thái unclean ví dụ như là không stopped một cách bình thường
+     nhưng nó vẫn hoạt đông.
+      --index-sanity-check: kiểm tra nếu như index ở trong trạng thái useable state
+      --verify-index-only: kiểm tra nếu index là không khớp mà không cần in ra tất cả index entires
+
+
+       kafka-run-class.sh kafka.tools.DumpLogSegments --files 00000000000052368601.index,00000000000052368601.log --index-sanity-check
+
+
+
+
+
+
+
+
 5. Consuming and Producing
 6. Client ACLs
 7. Unsafe Operations
 Summary
+
+
+

@@ -1,0 +1,6 @@
+Những câu hỏi
+
+1. Khi mình setup 1 cluster gồm 5 broker thì topic nó sẽ được trải như nào?
+- Về cơ bản thì 1 cluster sẽ chỉ có một topic là duy nhất. Còn việc nó dàn trải topic đó qua cluster thì thông qua partitions
+và replication
+2. Preferred Replica Election là sao tại sao phải trigger cluster controller ?
