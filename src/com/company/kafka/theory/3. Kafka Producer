@@ -1,0 +1,4 @@
+Summary
+- Kafka Producer, ProducerRecord
+- How to handle the error cái mà kafka có thể trả về
+- Configuration để kiểm soát behavior của producer
