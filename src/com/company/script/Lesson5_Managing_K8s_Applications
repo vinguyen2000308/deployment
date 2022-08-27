@@ -1,0 +1,16 @@
+0. What is Pods ?
+- How many pods on a single node ?
+
+1. Managing Pods
+- There are no good ways to just start a Pod from the command line -> deprecated -> remove soon
+- Recommended: start from yaml file: kubectl create -f resource.yaml
+    + apiVersion
+    + kind
+    + metadata
+    + container
+- Command:
+    kubectl get pods show currently running Pods
+    kubectl describe pods show details about a Pod
+    kubectl get pods <podname> -o -yaml show yaml specification of the Pod as it is currently running in the Etcd cluster db
+    kubectl delete pods mypod will delete a Pod
+

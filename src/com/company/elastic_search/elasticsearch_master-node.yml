@@ -1,0 +1,23 @@
+#Cluster Info
+cluster.name: search-engine
+node.name: node-1
+# Network Settings
+network.host: 0.0.0.0
+# Security Settings
+xpack.security.enabled: true
+xpack.security.enrollment.enabled: true
+xpack.security.http.ssl:
+  enabled: true
+  keystore.path: certs/http.p12
+xpack.security.transport.ssl:
+  enabled: true
+  verification_mode: certificate
+  keystore.path: certs/transport.p12
+  truststore.path: certs/transport.p12
+# Cluster Discovery Settings
+cluster.initial_master_nodes: ["108.137.132.101","108.137.75.14", "108.136.225.250"]
+discovery.seed_hosts: ["108.137.132.101","108.137.75.14", "108.136.225.250"]
+# More Settings
+ingest.geoip.downloader.enabled: false
+
+#pass for cluster: g-HSpUjzeje56N84lVwx

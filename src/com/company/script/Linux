@@ -1,0 +1,31 @@
+1. Check cgroup version
+    grep cgroup /proc/filesystems
+=> If your system supports cgroupv2, you would see
+    nodev   cgroup
+    nodev   cgroup2
+On a system with only cgroupv1, you would only see:
+    nodev   cgroup
+2. What is a systemd ?
+3. What is a cgroup, cgroupfs ?
+4. What is cri-dockerd ?
+
+
+Step 2: Install Docker Engine
+- On each of your nodes, install Docker for your Linux distribution
+- Install cri-dockerd
+    + Download file rpm: https://github.com/Mirantis/cri-dockerd/releases with latest version
+
+    + Convert file rpm -> deb
+            apt-get install alien dpkg-dev debhelper build-essential
+            alien name_of_file
+    + Install deb file
+            alien cri-dockerd-0.2.1.20220525024524.cb92d7b-0.el7.x86_64.rpm
+    + Verify: cri-dockerd v
+
+
+
+
+Install rpm:  apt install rpm
+
+kubeadm join 172.31.4.34:6443 --token r8ff8e.ilzbmiojp1yli2l9 \
+        --discovery-token-ca-cert-hash sha256:38198c41e15b8c601b5b27ad99cb16f74c5fd1b0708f05e88434a50f7aa2295a

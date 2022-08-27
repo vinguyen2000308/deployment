@@ -1,0 +1,33 @@
+Using yaml file
+- K8s resources are stored in the Etcd database in Json Format - all of config
+- YAML is more human friendly
+- YAML: relations between objects are defined by using indentation -> not use tab bt spaces for indentation
+- When working with YAML in K8s, the API specifications are followed -> kubectl explain to figure out which
+elements are required
+- Using kubectl create -f my_resource_file.yaml to create the resources or kubectl delete -f my_resource_file.yml
+to delete the resources
+- Generate YAML code: kubectl get <resource> -o yaml > my_resource.yml
+
+
+1. In the file yaml:
+- apiVersion: later
+- kind: type of resource here is pod
+-  metadata:
+    name: name
+    namespace: optional
+- spec:
+    containers:
+    - name: busy
+      image: busybox
+      command:
+        - sleep
+        - "3600"
+    - name: ...
+2. Working with the API
+    - kubectl api-resource shows a list of resource that is defined in the API
+    - kubectl api-versions shows resource versions
+    - kubectl explain
+IMPORTANT:
+ - API group
+
+kubectl get deployments.apps

@@ -1,0 +1,64 @@
+1. Container Runtimes
+
+    1.1 Forwarding IPv4 and letting iptables see bridged traffic
+        - Verify that the br_netfilter module is loaded by running lsmod | grep br_netfilter
+        - If not:
+                libkmod: ERROR ../libkmod/libkmod-module.c:1657 kmod_module_new_from_loaded: could not open /proc/modules: No such file or directory
+                Error: could not get list of modules: No such file or directory
+                => Run: sudo modprobe br_netfilter
+        - If okay:
+                br_netfilter           28672  0
+                bridge                266240  1 br_netfilter
+        - In order for a Linux node's iptables to correctly view bridged traffic,
+            verify that net.bridge.bridge-nf-call-iptables is set to 1 in your sysctl config:
+
+                cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+                overlay
+                br_netfilter
+                EOF
+
+                sudo modprobe overlay
+                sudo modprobe br_netfilter
+
+                # sysctl params required by setup, params persist across reboots
+                cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+                net.bridge.bridge-nf-call-iptables  = 1
+                net.bridge.bridge-nf-call-ip6tables = 1
+                net.ipv4.ip_forward                 = 1
+                EOF
+
+                # Apply sysctl params without reboot
+                sudo sysctl --system
+    1.2 Check cgroup driver
+        - Systemd: Systemd has a tight integration with cgroups and allocates a cgroup per systemd unit
+        - cgroupfs
+        => Using cgroupfs alongside systemd means that there will be two different cgroup managers
+        Problem with 2 cgroup managers:
+            People have reported cases where nodes that are configured to use cgroupfs for the kubelet and Docker,
+            but systemd for the rest of the processes, become unstable under resource pressure.
+
+            HOW TO: To configure this for Docker, set native.cgroupdriver=systemd
+
+    1.3 Container runtimes
+        - containerd
+        - CRI-O
+        - Docker Engine
+        - Mirantis Container Runtime
+2. Setup network plugin
+3. Installing Kubernetes with deployment tools
+    3.1 Bootstrapping clusters with kubeadm
+    Before Installing kubeadm
+    Requirements check:
+        - Required ports (control plane and worker nodes): https://kubernetes.io/docs/reference/ports-and-protocols/
+
+
+1. source command ?
+
+
+Bash Completion
+- Install Bash Completion
+    sudo apt install -y bash-completion
+- Run: kubectl completion -h: to list what you need to do
+- add to file .bash_profile
+    source ./kube/completion.bash.inc
+
